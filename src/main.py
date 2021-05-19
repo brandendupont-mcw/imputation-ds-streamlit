@@ -1,43 +1,53 @@
-import altair as alt
 import streamlit as st
-from vega_datasets import data
+import numpy as np
+import pandas as pd
+import altair as alt
+import time
+from ethnicolr import census_ln
+import os
+### Data URL
 
-st.title("Streamlit with Altair")
 
-cars = data.cars()
-iris = data.iris()
 
-cars_scatter = alt.Chart(cars).mark_point().encode(
-    x="Horsepower",
-    y="Miles_per_Gallon",
-    color="Origin",
-)
+"""
+# Run Race-Ethnicity Imputation Model
+A tool to generate predicted race and ethnicity based on last name information.
+"""
+uploaded_files = st.file_uploader("Upload CSV", type="csv")
 
-iris_scatter = alt.Chart(iris).mark_circle().encode(
-    alt.X('sepalLength', scale=alt.Scale(zero=False)),
-    alt.Y('sepalWidth', scale=alt.Scale(zero=False)),
-    color='species'
-)
 
-chart = cars_scatter | iris_scatter
+if uploaded_files:
+    file_upload_path = 'src/' + uploaded_files.name
+    upr = pd.read_csv(file_upload_path)
 
-def id_transform(data):
-    """ Altair data transformer that returns a fake named dataset with the object id. """
-    return {
-        "name": str(id(data))
-    }
+    st.table(upr.head())
 
-# register the id transformer
-alt.data_transformers.register("id", id_transform)
+"""
+### Run Imputation Model
+Click the button to run the imputation model, display output, and save results.
+"""
 
-with alt.data_transformers.enable("id"):
-    chart_dict = chart.to_dict()
+imp_button = st.button('Run Imputation Model')
 
-    st.json(chart_dict)
 
-    data = {
-        id(cars): cars,
-        id(iris): iris
-    }
+if imp_button:
 
-    st.vega_lite_chart(data, chart_dict)
+    pred_name = census_ln(upr, 'last_name')
+    with st.spinner('Model is Running'):
+        time.sleep(3)
+    #print(help(ethnicolr))
+    st.table(pred_name.head())
+    st.write('Imputation model results have been saved.')
+    pred_name.to_csv('src/model_output.csv')
+
+
+
+
+
+
+
+
+
+
+
+

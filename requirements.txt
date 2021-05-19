@@ -1,5 +1,2 @@
 streamlit
-black
-altair
-vega-datasets
 ethnicolr
